@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext.tsx';
 import { AuthProvider, useAuth } from '../src/auth/AuthContext.tsx';
 import { CustomClassesProvider } from '../src/hooks/useCustomClasses.tsx';
+import { RemindersProvider } from '../src/hooks/useReminders.tsx';
 import { ApiError } from '../src/api/client.ts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -56,7 +57,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <CustomClassesProvider><Root /></CustomClassesProvider>
+            <CustomClassesProvider><RemindersProvider><Root /></RemindersProvider></CustomClassesProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

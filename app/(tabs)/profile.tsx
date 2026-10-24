@@ -1,9 +1,11 @@
 import React from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Linking, Pressable, Switch, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type ThemeMode } from '../../src/theme/ThemeContext.tsx';
+import { useReminders } from '../../src/hooks/useReminders.tsx';
+import { LEAD_OPTIONS } from '../../src/lib/remindersPlan.ts';
 import { useAuth } from '../../src/auth/AuthContext.tsx';
 import { Button, Card, Chip, Row, Screen, SectionTitle, Segmented, Txt } from '../../src/components/ui.tsx';
 import { batchLabel, degreeLabel, formatDate, initials, sectionLabelOf, semesterLabel } from '../../src/lib/format.ts';
@@ -12,6 +14,7 @@ export default function Profile() {
   const { colors, mode, setMode, threshold, setThreshold } = useTheme();
   const { user, signOut, demo } = useAuth();
   const router = useRouter();
+  const rem = useReminders();
   const rows: [string, string | undefined][] = [
     ['Registration no.', user?.registrationNo], ['Email', user?.email], ['Degree', degreeLabel(user)], ['Department', user?.departmentName],
     ['Batch', batchLabel(user)], ['Section', sectionLabelOf(user)], ['Semester', semesterLabel(user)],
@@ -46,6 +49,26 @@ export default function Profile() {
             <Pressable accessibilityLabel="Raise minimum" onPress={() => setThreshold(threshold + 5)} hitSlop={8}><Ionicons name="add-circle" size={28} color={colors.primary} /></Pressable>
           </Row>
         </Row>
+      </Card>
+
+      <SectionTitle>Class reminders</SectionTitle>
+      <Card style={{ gap: 12 }}>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}>
+            <Txt variant="heading">Remind me before class</Txt>
+            <Txt variant="caption" color="textMuted">Notification with class name, start time and room. Includes classes you added.</Txt>
+          </View>
+          <Switch value={rem.enabled} onValueChange={(v) => { rem.setEnabled(v); }} trackColor={{ true: colors.primary, false: colors.border }} accessibilityLabel="Class reminders" />
+        </Row>
+        {rem.enabled ? (
+          <>
+            <Segmented<string> value={String(rem.lead)} onChange={(v) => rem.setLead(Number(v))} options={LEAD_OPTIONS.map((n) => ({ value: String(n), label: `${n} min` }))} />
+            <Txt variant="caption" color="textFaint">{demo ? 'Reminders are off in demo mode.' : rem.scheduled == null ? 'Waiting for your timetable…' : `${rem.scheduled} weekly reminder${rem.scheduled === 1 ? '' : 's'} scheduled, ${rem.lead} min before each class.`}</Txt>
+          </>
+        ) : null}
+        {rem.denied ? (
+          <Pressable onPress={() => Linking.openSettings()}><Txt color="danger" variant="caption">Notifications are blocked for this app. Tap to open settings and allow them.</Txt></Pressable>
+        ) : null}
       </Card>
 
       <SectionTitle>Academics</SectionTitle>

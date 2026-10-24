@@ -3,8 +3,8 @@ import { useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
 import * as api from '../api/endpoints.ts';
 import { useAuth } from '../auth/AuthContext.tsx';
 import {
-  attendanceSummary, combine, toDayAttendance, weeklyTrend,
-  type DayAttendance, type Summary, type TrendPoint,
+  attendanceSummary, combine, toDayAttendance,
+  type DayAttendance, type Summary,
 } from '../lib/attendance.ts';
 import type { Enrollment } from '../api/types.ts';
 
@@ -61,12 +61,11 @@ export function useAttendanceOverview() {
   }), [enrolled, dataKey, user]);
 
   const overall = useMemo(() => combine(courses.map((c) => c.summary)), [courses]);
-  const trend: TrendPoint[] = useMemo(() => weeklyTrend(courses.flatMap((c) => c.days)), [courses]);
   const pending = enrQ.isPending || (enrolled.length > 0 && results.some((r) => r.isPending));
   const error = enrQ.error ?? results.find((r) => r.error)?.error ?? null;
   const refetch = async () => { await enrQ.refetch(); await Promise.all(results.map((r) => r.refetch())); };
   const refetching = enrQ.isRefetching || results.some((r) => r.isRefetching);
-  return { courses, overall, trend, pending, error, refetch, refetching, enrolled };
+  return { courses, overall, pending, error, refetch, refetching, enrolled };
 }
 
 export function useTimetable() {

@@ -5,8 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeContext.tsx';
 import { useAuth } from '../../src/auth/AuthContext.tsx';
 import { Card, Chip, ErrorBanner, Row, Screen, SectionTitle, Skeleton, Txt } from '../../src/components/ui.tsx';
-import { ProgressRing, Sparkline } from '../../src/components/charts.tsx';
+import { ProgressRing } from '../../src/components/charts.tsx';
 import { useAttendanceOverview, useTimetable, useTranscript } from '../../src/hooks/queries.ts';
+import { useCustomClasses } from '../../src/hooks/useCustomClasses.tsx';
+import { mergeTimetable } from '../../src/lib/customTimetable.ts';
 import { canSkip, mustAttend, presentStreak, riskOf } from '../../src/lib/attendance.ts';
 import { classStatus, courseName, courseShort, degreeLabel, greeting, initials, num, semesterLabel, timeRange, WEEKDAY_KEYS, WEEKDAYS } from '../../src/lib/format.ts';
 
@@ -17,10 +19,11 @@ export default function Home() {
   const ov = useAttendanceOverview();
   const tt = useTimetable();
   const tr = useTranscript();
+  const { classes: myClasses } = useCustomClasses();
 
   const now = new Date();
   const todayKey = WEEKDAY_KEYS[WEEKDAYS[now.getDay()]];
-  const today = useMemo(() => (tt.data?.[todayKey] ?? []).filter((e) => e.type !== 'break'), [tt.data, todayKey]);
+  const today = useMemo(() => mergeTimetable(tt.data, myClasses)[todayKey].filter((e) => e.type !== 'break'), [tt.data, myClasses, todayKey]);
   const nextUp = today.find((e) => classStatus(e, now) !== 'done');
 
   const atRisk = ov.courses.filter((c) => riskOf(c.summary, threshold) === 'danger' || riskOf(c.summary, threshold) === 'warning')
@@ -70,10 +73,7 @@ export default function Home() {
                   ? <Chip tone="success" icon="checkmark-circle" label={skip > 0 ? `Can miss ${skip} more` : 'Right on the limit'} />
                   : <Chip tone="danger" icon="warning" label={`Attend next ${need} to reach ${threshold}%`} />
               ) : null}
-              <Row style={{ gap: 12 }}>
-                <Sparkline values={ov.trend.map((t) => t.percent)} color={ringColor} />
-                {streak > 1 ? <Chip tone="primary" icon="flame" label={`${streak} in a row`} /> : null}
-              </Row>
+              {streak > 1 ? <Chip tone="primary" icon="flame" label={`${streak} in a row`} /> : null}
             </View>
           </Row>
         </Card>
@@ -98,7 +98,7 @@ export default function Home() {
                 <Row style={{ opacity: st === 'done' ? 0.55 : 1 }}>
                   <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: st === 'now' ? colors.success : isNext ? colors.primary : colors.border }} />
                   <View style={{ flex: 1, gap: 2 }}>
-                    <Txt variant="heading" numberOfLines={1}>{courseName(e.course)}</Txt>
+                    <Txt variant="heading" numberOfLines={1}>{courseName(e.course)}{e.custom ? ' ★' : ''}</Txt>
                     <Txt variant="caption" color="textMuted">{timeRange(e.startTime, e.endTime)}{e.location ? ` · ${e.location}` : ''}</Txt>
                   </View>
                   {st === 'now' ? <Chip tone="success" label="Now" /> : isNext ? <Chip tone="primary" label="Next" /> : st === 'done' ? <Chip tone="muted" label="Done" /> : null}

@@ -3,10 +3,11 @@ import { View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../src/theme/ThemeContext.tsx';
 import { Card, Chip, Empty, ErrorBanner, ProgressBar, Row, Screen, SectionTitle, Skeleton, Txt } from '../../src/components/ui.tsx';
-import { ProgressRing, TrendChart } from '../../src/components/charts.tsx';
+import { ProgressRing } from '../../src/components/charts.tsx';
+import { CoursePlanner } from '../../src/components/CoursePlanner.tsx';
 import { AttendanceCalendar } from '../../src/components/AttendanceCalendar.tsx';
 import { useEnrollments, usePerformance, useSectionDays } from '../../src/hooks/queries.ts';
-import { attendanceSummary, canSkip, mustAttend, weeklyTrend } from '../../src/lib/attendance.ts';
+import { attendanceSummary, canSkip, mustAttend } from '../../src/lib/attendance.ts';
 import { courseName, initials, num } from '../../src/lib/format.ts';
 
 export default function CourseDetail() {
@@ -19,7 +20,6 @@ export default function CourseDetail() {
   const s = e?.section;
   const sum = attendanceSummary(att.days);
   const color = sum.total === 0 ? colors.textFaint : sum.percent >= threshold ? colors.success : colors.danger;
-  const trend = weeklyTrend(att.days);
   const refresh = () => { enr.refetch(); att.refetch(); perf.refetch(); };
   const assessments = perf.data?.assessments ?? [];
   const overall = perf.data?.overallPercentage != null ? num(perf.data.overallPercentage) : null;
@@ -59,9 +59,10 @@ export default function CourseDetail() {
                     : <Chip tone="danger" icon="warning" label={`Attend next ${mustAttend(sum.present, sum.total, threshold)}`} />}
               </View>
             </Row>
-            {trend.length > 1 ? <TrendChart points={trend} threshold={threshold} height={160} /> : null}
           </Card>
           <Card><AttendanceCalendar days={att.days} /></Card>
+          <SectionTitle>What‑if planner</SectionTitle>
+          <Card><CoursePlanner summary={sum} /></Card>
         </>
       )}
 

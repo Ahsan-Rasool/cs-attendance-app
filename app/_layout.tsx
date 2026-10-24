@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext.tsx';
 import { AuthProvider, useAuth } from '../src/auth/AuthContext.tsx';
+import { CustomClassesProvider } from '../src/hooks/useCustomClasses.tsx';
 import { ApiError } from '../src/api/client.ts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -55,7 +56,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <Root />
+            <CustomClassesProvider><Root /></CustomClassesProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

@@ -78,6 +78,9 @@ export interface TimetableEntry {
   instructor?: Instructor | null;
   sectionLabel?: string;
   courseInstanceSectionId?: string | number;
+  /** true for classes the student added on this device */
+  custom?: boolean;
+  note?: string;
 }
 
 export type Timetable = Partial<Record<

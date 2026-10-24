@@ -1,39 +1,52 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeContext.tsx';
-import { Card, Chip, Empty, ErrorBanner, Row, Screen, SectionTitle, Skeleton, Txt } from '../../src/components/ui.tsx';
-import { CourseBars, ProgressRing, TrendChart } from '../../src/components/charts.tsx';
-import { AttendanceCalendar } from '../../src/components/AttendanceCalendar.tsx';
+import { useAuth } from '../../src/auth/AuthContext.tsx';
+import { Button, Card, Chip, Empty, ErrorBanner, Row, Screen, SectionTitle, Skeleton, Txt } from '../../src/components/ui.tsx';
+import { CourseBars, ProgressRing } from '../../src/components/charts.tsx';
+import { AttendanceCalendar, STATUS_LABEL } from '../../src/components/AttendanceCalendar.tsx';
+import { CoursePlanner } from '../../src/components/CoursePlanner.tsx';
 import { useAttendanceOverview } from '../../src/hooks/queries.ts';
-import { canSkip, mustAttend, projectPercent, weeklyTrend } from '../../src/lib/attendance.ts';
 import { courseName, courseShort, formatDate } from '../../src/lib/format.ts';
+import { buildAttendanceHtml, sharePdf } from '../../src/lib/pdf.ts';
 
 export default function AttendanceTab() {
   const { colors, threshold } = useTheme();
+  const { user } = useAuth();
   const router = useRouter();
   const ov = useAttendanceOverview();
   const [sel, setSel] = useState<string>('all'); // 'all' or sectionId
+  const [busy, setBusy] = useState(false);
 
   const course = ov.courses.find((c) => String(c.sectionId) === sel);
   const days = useMemo(() => (course ? course.days : ov.courses.flatMap((c) => c.days)), [course, ov.courses]);
   const summary = course ? course.summary : ov.overall;
-  const trend = useMemo(() => (course ? weeklyTrend(course.days) : ov.trend), [course, ov.trend]);
-  const [miss, setMiss] = useState(0);
-  const [attend, setAttend] = useState(0);
-  const projected = projectPercent(summary.present, summary.total, attend, miss);
-  const skip = canSkip(summary.present, summary.total, threshold);
-  const need = mustAttend(summary.present, summary.total, threshold);
   const recentAbsences = useMemo(() => days.filter((d) => d.status === 'absent').sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 6), [days]);
   const unmarked = days.filter((d) => d.status === 'unmarked').length;
   const cancelled = days.filter((d) => d.status === 'cancelled').length;
   const color = summary.total === 0 ? colors.textFaint : summary.percent >= threshold ? colors.success : colors.danger;
+  const planned = course ? [course] : ov.courses;
+
+  const exportPdf = async () => {
+    setBusy(true);
+    try {
+      const rows = (course ? [course] : ov.courses).map((c) => ({
+        name: courseName(c.enrollment.section.course), code: c.enrollment.section.course.courseCode, summary: c.summary,
+        dates: [...c.days].filter((d) => d.status === 'present' || d.status === 'absent' || d.status === 'unmarked' || d.status === 'cancelled')
+          .sort((a, b) => (a.date < b.date ? -1 : 1)).map((d) => ({ date: d.date, status: STATUS_LABEL[d.status] })),
+      }));
+      await sharePdf(buildAttendanceHtml(`${user?.name ?? ''}${user?.registrationNo ? ` · ${user.registrationNo}` : ''}`, rows, summary, threshold), 'attendance.pdf');
+    } catch (e) {
+      Alert.alert('Could not create PDF', e instanceof Error ? e.message : 'Unknown error');
+    } finally { setBusy(false); }
+  };
 
   const chip = (key: string, label: string) => {
     const on = sel === key;
     return (
-      <Pressable key={key} onPress={() => { setSel(key); setMiss(0); setAttend(0); }} accessibilityRole="button" accessibilityState={{ selected: on }}
+      <Pressable key={key} onPress={() => setSel(key)} accessibilityRole="button" accessibilityState={{ selected: on }}
         style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: on ? colors.primary : colors.card, borderWidth: 1, borderColor: on ? colors.primary : colors.border }}>
         <Txt variant="caption" style={{ fontWeight: '700', color: on ? colors.onPrimary : colors.textMuted }}>{label}</Txt>
       </Pressable>
@@ -42,7 +55,10 @@ export default function AttendanceTab() {
 
   return (
     <Screen onRefresh={ov.refetch} refreshing={ov.refetching}>
-      <Txt variant="title">Attendance</Txt>
+      <Row style={{ justifyContent: 'space-between' }}>
+        <Txt variant="title">Attendance</Txt>
+        {ov.courses.length ? <View style={{ width: 178 }}><Button title="Download PDF" icon="download" onPress={exportPdf} loading={busy} variant="ghost" /></View> : null}
+      </Row>
       {ov.error ? <ErrorBanner error={ov.error} onRetry={ov.refetch} /> : null}
       {ov.pending ? <><Skeleton height={60} /><Skeleton height={220} /><Skeleton height={140} /></> : ov.courses.length === 0 ? (
         <Empty icon="calendar-outline" title="No enrolled courses" text="Your attendance will appear here once you are enrolled in a course." />
@@ -67,16 +83,6 @@ export default function AttendanceTab() {
             </Row>
           </Card>
 
-          <SectionTitle>Trend</SectionTitle>
-          <Card>
-            {trend.length === 0 ? <Txt color="textMuted" variant="caption">The graph appears after the first lecture is marked.</Txt> : (
-              <>
-                <TrendChart points={trend} threshold={threshold} />
-                <Txt variant="caption" color="textFaint" style={{ marginTop: 6 }}>Cumulative attendance at the end of each week.</Txt>
-              </>
-            )}
-          </Card>
-
           {!course ? (
             <>
               <SectionTitle>By course</SectionTitle>
@@ -87,21 +93,15 @@ export default function AttendanceTab() {
           ) : null}
 
           <SectionTitle>What‑if planner</SectionTitle>
-          <Card style={{ gap: 14 }}>
-            <Row style={{ justifyContent: 'space-between' }}>
-              <Stepper label="If I miss" value={miss} onChange={setMiss} />
-              <Stepper label="If I attend" value={attend} onChange={setAttend} />
-            </Row>
-            <Row style={{ justifyContent: 'space-between' }}>
-              <Txt color="textMuted">You would be at</Txt>
-              <Txt variant="title" color={projected >= threshold ? 'success' : 'danger'}>{projected}%</Txt>
-            </Row>
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-            {summary.total === 0 ? <Txt variant="caption" color="textMuted">Nothing to plan yet — no lectures have been marked.</Txt>
-              : summary.percent >= threshold
-                ? <Row><Ionicons name="shield-checkmark" size={18} color={colors.success} /><Txt variant="caption" style={{ flex: 1 }}>{skip > 0 ? `You can miss ${skip} more lecture${skip === 1 ? '' : 's'} and stay at or above ${threshold}%.` : `You are exactly at the limit — don't miss the next one.`}</Txt></Row>
-                : <Row><Ionicons name="warning" size={18} color={colors.danger} /><Txt variant="caption" style={{ flex: 1 }}>Attend the next {need} lecture{need === 1 ? '' : 's'} in a row to climb back to {threshold}%.</Txt></Row>}
-          </Card>
+          {planned.map((c) => (
+            <Card key={String(c.sectionId)} style={{ gap: 12 }}>
+              <Row style={{ justifyContent: 'space-between' }}>
+                <Txt variant="heading" numberOfLines={1} style={{ flex: 1 }}>{courseName(c.enrollment.section.course)}</Txt>
+                <Txt variant="caption" color="textMuted">{c.summary.present}/{c.summary.total}</Txt>
+              </Row>
+              <CoursePlanner summary={c.summary} />
+            </Card>
+          ))}
 
           <SectionTitle>{course ? 'Calendar' : 'All lectures'}</SectionTitle>
           <Card><AttendanceCalendar days={days} /></Card>
@@ -120,20 +120,3 @@ export default function AttendanceTab() {
     </Screen>
   );
 }
-
-function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
-  const { colors } = useTheme();
-  const btn = (icon: 'add' | 'remove', d: number) => (
-    <Pressable accessibilityLabel={`${icon === 'add' ? 'Increase' : 'Decrease'} ${label}`} onPress={() => onChange(Math.max(0, Math.min(60, value + d)))} hitSlop={6}
-      style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
-      <Ionicons name={icon} size={18} color={colors.primary} />
-    </Pressable>
-  );
-  return (
-    <View style={{ gap: 6 }}>
-      <Txt variant="caption" color="textMuted">{label}</Txt>
-      <Row>{btn('remove', -1)}<Txt variant="title" style={{ minWidth: 30, textAlign: 'center' }}>{value}</Txt>{btn('add', 1)}</Row>
-    </View>
-  );
-}
-

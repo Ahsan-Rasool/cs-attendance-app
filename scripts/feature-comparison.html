@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+ @page{size:A4;margin:16mm}
+ body{font-family:Helvetica,Arial,sans-serif;color:#0f1e3d;font-size:11.5px;line-height:1.45}
+ h1{color:#14397d;font-size:24px;margin:0 0 4px} .sub{color:#55627a;margin-bottom:16px}
+ h2{color:#14397d;font-size:15px;margin:20px 0 6px;border-bottom:2px solid #14397d;padding-bottom:3px}
+ table{width:100%;border-collapse:collapse;margin-top:6px} th{background:#14397d;color:#fff;text-align:left;padding:6px 8px;font-size:11px}
+ td{padding:6px 8px;border-bottom:1px solid #e2e7f0;vertical-align:top} td:first-child{width:30%;font-weight:700}
+ .yes{color:#1b8a4c;font-weight:700} .no{color:#c62828;font-weight:700}
+ .note{background:#f3f5fa;border-left:4px solid #14397d;padding:8px 10px;margin-top:14px;color:#55627a;font-size:10.5px}
+ tr{page-break-inside:avoid}
+</style></head><body>
+<h1>CS Attendance Plus</h1>
+<div class="sub">What this app has that the official CS Attendance System app (v1.4.4, student side) does not</div>
+
+<h2>New features in CS Attendance Plus</h2>
+<table><tr><th>Feature</th><th>What it does</th></tr>
+<tr><td>Dark mode</td><td>System / Light / Dark theme, one-tap toggle on the home screen. The official app is light-only.</td></tr>
+<tr><td>Attendance tab</td><td>One screen for all courses: overall ring, present/absent counts, per-course bars against the minimum, recent absences, and a calendar for any single course.</td></tr>
+<tr><td>What-if planner (per course)</td><td>Every course has its own "if I miss N / if I attend N" calculator showing the resulting percentage.</td></tr>
+<tr><td>"Can I skip?" guidance</td><td>Shows how many lectures you can still miss, or how many you must attend in a row to get back to the minimum, on the home screen, course list and course page.</td></tr>
+<tr><td>Adjustable minimum %</td><td>Set your own attendance minimum (default 75%); warnings and bars follow it.</td></tr>
+<tr><td>Add your own timetable classes</td><td>Add personal classes or activities with day, time and room. Stored on your phone only; never sent to the server. They appear in the timetable, today's list, PDFs and reminders.</td></tr>
+<tr><td>Class reminders with room</td><td>Weekly notification 5/10/15/30 minutes before each class showing class name, start time, room and teacher. Works offline.</td></tr>
+<tr><td>Timetable PDF</td><td>Download or share a day-by-day PDF of your week, including your own classes.</td></tr>
+<tr><td>Attendance PDF</td><td>Course summary table with status ("can miss N" / "attend next N") plus a date-by-date lecture log, for all courses or one.</td></tr>
+<tr><td>GPA calculator</td><td>Pick expected grades per course to see this semester's GPA and your projected CGPA; enter a target CGPA to see the GPA you need.</td></tr>
+<tr><td>Dashboard</td><td>Greeting, overall attendance, CGPA, courses at risk, and today's classes marked Now / Next / Done.</td></tr>
+<tr><td>Attendance streak</td><td>Counts how many lectures in a row you have attended.</td></tr>
+<tr><td>Offline cache</td><td>Shows your last-seen data when there is no connection.</td></tr>
+<tr><td>Demo mode</td><td>Explore the whole app with made-up data and no account.</td></tr>
+<tr><td>Installs side by side</td><td>Separate package (lms.iotpro.plus), so it can sit next to the official app.</td></tr>
+</table>
+
+<h2>What the official app has that this app does not</h2>
+<table><tr><th>Feature</th><th>Status here</th></tr>
+<tr><td>Surveys</td><td class="no">Not included</td></tr>
+<tr><td>Teaching-assistant tools</td><td class="no">Not included</td></tr>
+<tr><td>Browse and enrol in courses</td><td class="no">Not included</td></tr>
+<tr><td>Academic calendar</td><td class="no">Not included</td></tr>
+<tr><td>Server push notifications (results, attendance marked)</td><td class="no">Not included — needs the university's Firebase setup</td></tr>
+<tr><td>Biometric sign-in</td><td class="no">Not included</td></tr>
+<tr><td>Grades sheet (DMC) PDF export</td><td class="no">Grades are viewable here but not exported</td></tr>
+<tr><td>Faculty and admin screens</td><td class="no">Student side only</td></tr>
+</table>
+
+<div class="note"><b>How this was checked:</b> the comparison is based on analysis of the official v1.4.4 app's published code, covering its student screens. Items marked "not found" mean no sign of them was found there; a newer official version may differ. CS Attendance Plus is an unofficial client, has not been tested against the live server, and GPA figures are estimates on a standard 4.0 scale. Students cannot mark attendance in either app — only teachers and TAs can.</div>
+</body></html>

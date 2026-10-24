@@ -74,6 +74,7 @@ export default function Profile() {
       <SectionTitle>Academics</SectionTitle>
       <Card style={{ gap: 4, padding: 6 }}>
         <Link2 icon="school" label="Grades & GPA" onPress={() => router.push('/dmc')} />
+        <Link2 icon="calculator" label="GPA calculator" onPress={() => router.push('/gpa')} />
         <Link2 icon="calendar" label="Weekly timetable" onPress={() => router.push('/timetable')} />
       </Card>
 

@@ -41,6 +41,7 @@ function Root() {
           <Stack.Screen name="notice/[id]" options={{ ...header, title: 'Notice' }} />
           <Stack.Screen name="timetable" options={{ ...header, title: 'Timetable' }} />
           <Stack.Screen name="dmc" options={{ ...header, title: 'Grades & GPA' }} />
+          <Stack.Screen name="gpa" options={{ ...header, title: 'GPA calculator' }} />
           <Stack.Screen name="change-password" options={{ ...header, title: 'Change password' }} />
         </Stack.Protected>
         <Stack.Protected guard={status === 'out'}>

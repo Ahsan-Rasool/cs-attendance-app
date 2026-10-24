@@ -3,12 +3,15 @@ import { View } from 'react-native';
 import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg';
 import { useTheme } from '../src/theme/ThemeContext.tsx';
 import { Card, Chip, Empty, ErrorBanner, Row, Screen, SectionTitle, Skeleton, Txt } from '../src/components/ui.tsx';
+import { useRouter } from 'expo-router';
+import { Button } from '../src/components/ui.tsx';
 import { useTranscript } from '../src/hooks/queries.ts';
 import { gradeColor, num } from '../src/lib/format.ts';
 
 export default function Dmc() {
   const { colors } = useTheme();
   const q = useTranscript();
+  const router = useRouter();
   const t = q.data;
   const sems = [...(t?.semesters ?? [])];
   const gpas = sems.map((s) => (s.gpa != null ? num(s.gpa) : null));
@@ -38,6 +41,7 @@ export default function Dmc() {
               </View>
             ) : null}
           </Card>
+          <Button title="GPA calculator" icon="calculator" variant="ghost" onPress={() => router.push('/gpa')} />
           {[...sems].reverse().map((s) => (
             <View key={String(s.semesterId)} style={{ gap: 8 }}>
               <SectionTitle>{s.semester ?? ([s.season, s.year].filter(Boolean).join(' ') || 'Semester')}</SectionTitle>
